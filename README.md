@@ -1,6 +1,30 @@
-# API de estudantes, cursos e matrículas
+# API REST desenvolvida com NestJS e Drizzle ORM
 
-API REST desenvolvida com NestJS, TypeScript, Drizzle ORM e PostgreSQL 17. Permite cadastrar estudantes e cursos e registrar matrículas, relacionando um estudante a um curso.
+API REST permite cadastrar estudantes e cursos e registrar matrículas, relacionando um estudante a um curso.
+
+```mermaid
+erDiagram
+    students ||--o{ enrollments : "possui"
+    courses ||--o{ enrollments : "recebe"
+
+    students {
+        integer ra PK
+        varchar(100) name
+    }
+
+    courses {
+        serial id PK
+        varchar(100) name
+    }
+
+    enrollments {
+        integer student_ra PK, FK
+        integer course_id PK, FK
+        timestamptz enrolled_at
+    }
+```
+
+
 
 ## Estrutura
 
