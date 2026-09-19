@@ -1,6 +1,6 @@
 # API REST desenvolvida com NestJS e Drizzle ORM
 
-API REST permite cadastrar estudantes e cursos e registrar matrículas, relacionando um estudante a um curso.
+A API REST permite cadastrar estudantes e cursos e registrar matrículas, relacionando um estudante a um curso.
 
 ```mermaid
 erDiagram
@@ -44,13 +44,7 @@ erDiagram
         └── modules/         # Estudantes, cursos e matrículas
 ```
 
-## Pré-requisitos
 
-- Docker com Docker Compose disponível e em execução.
-- `curl` para testar a API.
-- Para executar o servidor fora do Docker: Node.js e npm. A imagem do servidor utiliza Node.js 24.
-
-Os comandos abaixo usam Bash (Linux, WSL ou Git Bash). Execute os comandos do Compose na raiz do projeto, onde está o arquivo `compose.yml`.
 
 ## Configuração do ambiente
 
@@ -79,10 +73,9 @@ Mantenha `PGPORT=5432` nesta configuração: o contêiner do PostgreSQL usa essa
 
 ## Subir a aplicação com Docker Compose
 
-Valide a configuração e construa/inicie os serviços em segundo plano:
+Construa/inicie os serviços em segundo plano:
 
 ```bash
-docker compose config --quiet
 docker compose up -d --build
 ```
 
@@ -101,12 +94,6 @@ Com as portas do exemplo:
 - PostgreSQL acessível pelo computador: `localhost:5433`.
 - PostgreSQL acessível pelo servidor no Compose: `postgres:5432`.
 
-Para reconstruir o servidor após alterações no código:
-
-```bash
-docker compose up -d --build server
-```
-
 Para parar e remover os contêineres, preservando os dados do banco:
 
 ```bash
@@ -115,19 +102,10 @@ docker compose down
 
 Os dados ficam no volume `postgres_data`. O arquivo `postgres/init.sql` é executado na primeira inicialização de um banco vazio; alterações posteriores nesse arquivo não são aplicadas automaticamente a um volume existente.
 
-### Banco existente sem as tabelas da API
-
-Se as rotas retornarem `500` e os logs do PostgreSQL mostrarem `relation "students" does not exist` (ou `courses`/`enrollments`), aplique o script atual ao banco existente, a partir da raiz:
-
-```bash
-docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 --single-transaction -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < postgres/init.sql
-```
-
-O script usa `CREATE TABLE IF NOT EXISTS`: cria as tabelas ausentes e preserva os registros existentes. Ele não atualiza a estrutura de tabelas já criadas. Reconstruir a imagem, por si só, não reaplica o SQL a um volume existente.
 
 ## Rotas disponíveis
 
-Somente as rotas de estudantes possuem o prefixo `/api`. Não há rota cadastrada para `/`.
+Todas as rotas de estudantes, cursos e matrículas possuem o prefixo `/api`. Não há rota cadastrada para `/`.
 
 | Método | Rota | Operação |
 | --- | --- | --- |
@@ -136,15 +114,15 @@ Somente as rotas de estudantes possuem o prefixo `/api`. Não há rota cadastrad
 | GET | `/api/students/:ra` | Buscar estudante pelo RA |
 | PATCH | `/api/students/:ra` | Atualizar nome do estudante |
 | DELETE | `/api/students/:ra` | Excluir estudante |
-| POST | `/courses` | Criar curso |
-| GET | `/courses` | Listar cursos |
-| GET | `/courses/:id` | Buscar curso pelo ID |
-| PATCH | `/courses/:id` | Atualizar nome do curso |
-| DELETE | `/courses/:id` | Excluir curso |
-| POST | `/enrollments` | Criar matrícula |
-| GET | `/enrollments` | Listar matrículas |
-| GET | `/enrollments/student/:studentRa/course/:courseId` | Buscar matrícula |
-| DELETE | `/enrollments/student/:studentRa/course/:courseId` | Excluir matrícula |
+| POST | `/api/courses` | Criar curso |
+| GET | `/api/courses` | Listar cursos |
+| GET | `/api/courses/:id` | Buscar curso pelo ID |
+| PATCH | `/api/courses/:id` | Atualizar nome do curso |
+| DELETE | `/api/courses/:id` | Excluir curso |
+| POST | `/api/enrollments` | Criar matrícula |
+| GET | `/api/enrollments` | Listar matrículas |
+| GET | `/api/enrollments/student/:studentRa/course/:courseId` | Buscar matrícula |
+| DELETE | `/api/enrollments/student/:studentRa/course/:courseId` | Excluir matrícula |
 
 ## Testar todas as rotas com curl
 
@@ -194,7 +172,7 @@ curl -i -X PATCH "$BASE_URL/api/students/$STUDENT_RA" \
 Criar curso (`201 Created`):
 
 ```bash
-curl -i -X POST "$BASE_URL/courses" \
+curl -i -X POST "$BASE_URL/api/courses" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Desenvolvimento Web III"}'
 ```
@@ -208,19 +186,19 @@ COURSE_ID=1
 Listar cursos (`200 OK`):
 
 ```bash
-curl -i "$BASE_URL/courses"
+curl -i "$BASE_URL/api/courses"
 ```
 
 Buscar pelo ID (`200 OK`):
 
 ```bash
-curl -i "$BASE_URL/courses/$COURSE_ID"
+curl -i "$BASE_URL/api/courses/$COURSE_ID"
 ```
 
 Atualizar o nome (`200 OK`):
 
 ```bash
-curl -i -X PATCH "$BASE_URL/courses/$COURSE_ID" \
+curl -i -X PATCH "$BASE_URL/api/courses/$COURSE_ID" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Desenvolvimento Web Avancado"}'
 ```
@@ -232,7 +210,7 @@ O estudante e o curso precisam existir. A combinação de RA e ID do curso ident
 Criar matrícula (`201 Created`):
 
 ```bash
-curl -i -X POST "$BASE_URL/enrollments" \
+curl -i -X POST "$BASE_URL/api/enrollments" \
   -H 'Content-Type: application/json' \
   -d "{\"studentRa\":$STUDENT_RA,\"courseId\":$COURSE_ID}"
 ```
@@ -242,13 +220,13 @@ A resposta inclui `studentRa`, `courseId` e `enrolledAt`, preenchido automaticam
 Listar matrículas (`200 OK`):
 
 ```bash
-curl -i "$BASE_URL/enrollments"
+curl -i "$BASE_URL/api/enrollments"
 ```
 
 Buscar a matrícula (`200 OK`):
 
 ```bash
-curl -i "$BASE_URL/enrollments/student/$STUDENT_RA/course/$COURSE_ID"
+curl -i "$BASE_URL/api/enrollments/student/$STUDENT_RA/course/$COURSE_ID"
 ```
 
 ### 4. Excluir matrícula, estudante e curso
@@ -258,7 +236,7 @@ Remova primeiro a matrícula, pois as chaves estrangeiras impedem excluir estuda
 Excluir matrícula (`200 OK`):
 
 ```bash
-curl -i -X DELETE "$BASE_URL/enrollments/student/$STUDENT_RA/course/$COURSE_ID"
+curl -i -X DELETE "$BASE_URL/api/enrollments/student/$STUDENT_RA/course/$COURSE_ID"
 ```
 
 Excluir estudante (`200 OK`):
@@ -270,7 +248,7 @@ curl -i -X DELETE "$BASE_URL/api/students/$STUDENT_RA"
 Excluir curso (`200 OK`):
 
 ```bash
-curl -i -X DELETE "$BASE_URL/courses/$COURSE_ID"
+curl -i -X DELETE "$BASE_URL/api/courses/$COURSE_ID"
 ```
 
 As exclusões retornam um objeto JSON com a propriedade `message`.
