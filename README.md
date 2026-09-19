@@ -274,31 +274,3 @@ curl -i -X POST "$BASE_URL/api/students" \
 
 Na implementação atual, erros de integridade do banco ainda não recebem tratamento específico em todos os serviços. RA duplicado, matrícula com referências inexistentes e exclusão de registros com matrículas podem retornar `500 Internal Server Error`. Nomes formados apenas por espaços também passam na validação atual.
 
-## Executar o servidor localmente
-
-Para usar o PostgreSQL no Docker e o NestJS no computador, execute na raiz:
-
-```bash
-docker compose stop server
-docker compose up -d --build postgres
-cd server
-npm ci
-npm run dev
-```
-
-O servidor carrega o `.env` da raiz. Com a configuração de exemplo, converte o host `postgres` para `localhost`, usa `PGPORT_HOST=5433` e escuta em `PORT=3000`. Variáveis `PGHOST` e `PGPORT` previamente definidas no ambiente têm prioridade sobre essa adaptação local.
-
-Para testar nesse modo, em outro terminal Bash, utilize os mesmos comandos curl com:
-
-```bash
-BASE_URL=http://localhost:3000
-```
-
-Para compilar e executar sem o modo de observação, dentro de `server`:
-
-```bash
-npm run build
-npm run start:prod
-```
-
-O projeto ainda não possui script de testes automatizados configurado.
