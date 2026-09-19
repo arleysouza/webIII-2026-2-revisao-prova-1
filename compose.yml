@@ -1,0 +1,36 @@
+# As variáveis ${...} são lidas do .env ao lado deste arquivo.
+services:
+  postgres:
+    build: ./postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Defina POSTGRES_DB no .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Defina POSTGRES_USER no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+    ports:
+      - "${PGPORT_HOST:?Defina PGPORT_HOST no .env}:${PGPORT:?Defina PGPORT no .env}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  server:
+    build: ./server
+    ports:
+      - "${API_PORT:?Defina API_PORT no .env}:${PORT:?Defina PORT no .env}"
+    environment:
+      PORT: ${PORT:?Defina PORT no .env}
+      PGHOST: ${PGHOST:?Defina PGHOST no .env}
+      PGPORT: ${PGPORT:?Defina PGPORT no .env}
+      PGDATABASE: ${POSTGRES_DB:?Defina POSTGRES_DB no .env}
+      PGUSER: ${POSTGRES_USER:?Defina POSTGRES_USER no .env}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
